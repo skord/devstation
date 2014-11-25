@@ -6,7 +6,7 @@
     cache_valid_time: 120
   with_items:
     - 'python-pip'
-    - 'python-curl'
+    - 'python-pycurl'
     - 'python-dev'
     - 'python-apt'
 - name: pip install ansible and deps
@@ -17,4 +17,4 @@
     - 'docker-py'
     - 'pycrypto'
     - 'ansible'
-
+    - 'dopy'

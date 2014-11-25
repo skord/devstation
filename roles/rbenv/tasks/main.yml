@@ -1,0 +1,23 @@
+- name: clone rbenv repo
+  git:
+    repo: https://github.com/sstephenson/rbenv.git
+    dest: /home/app/.rbenv
+- name: put rbenv bin in path
+  lineinfile:
+    dest: /home/app/.bashrc
+    line: export PATH="$HOME/.rbenv/bin:$PATH"
+- name: add rbenv init
+  lineinfile:
+    dest: /home/app/.bashrc
+    line: eval "$(rbenv init -)"
+- name: Install ruby-build
+  git:
+    repo: https://github.com/sstephenson/ruby-build.git
+    dest: /home/app/.rbenv/plugins/ruby-build
+- name: Install preferred ruby
+  command: "/home/app/.rbenv/bin/rbenv install {{ preferred_ruby }}"
+  args:
+    creates: "/home/app/.rbenv/versions/{{ preferred_ruby }}/bin/ruby"
+- name: Set preferred ruby as global
+  command: "/home/app/.rbenv/bin/rbenv global {{ preferred_ruby }}"
+

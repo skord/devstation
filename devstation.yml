@@ -1,6 +1,81 @@
-- name: Install Docker
+- name: Boot and register our devstation
   hosts: localhost
   connection: local
+  tasks:
+    - name: Create the devstation
+      digital_ocean:
+        state: present
+        command: droplet
+        name: devstation
+        size_id: "{{ do_size_id }}"
+        image_id: "{{ do_image_id }}"
+        region_id: "{{ do_region_id }}"
+        wait_timeout: 500
+        unique_name: yes
+        ssh_key_ids: "{{ do_ssh_key_ids }}"
+      register: devstation_droplet
+    - name: Add instance to hosts group
+      local_action: add_host hostname={{ devstation_droplet.droplet.ip_address }} groupname=launched
+    - name: Wait for droplet to be available
+      local_action: wait_for host={{ devstation_droplet.droplet.ip_address }} port=22 delay=90 timeout=600 state=started
+
+- name: Install Docker
+  hosts: launched
+  user: root
   roles:
-    - role: ansible
     - role: docker
+
+- name: Install some packages
+  hosts: launched
+  user: root
+  tasks:
+    - name: Install some packages
+      apt:
+        name: "{{ item }}"
+      with_items:
+        - 'git'
+        - 'build-essential'
+        - 'openssl'
+        - 'libssl-dev'
+
+- name: User Account
+  user: root
+  hosts: launched
+  tasks:
+    - name: Create user
+      user:
+        name: app
+        createhome: yes
+        append: yes
+        groups: docker
+        shell: /bin/bash
+        state: present
+    - name: Create user SSH directory
+      file: 
+        path: /home/app/.ssh
+        state: directory
+        mode: 0700
+        owner: app
+        group: app
+    - name: Copy root user authorized keys
+      command: cp /root/.ssh/authorized_keys /home/app/.ssh/authorized_keys
+      args:
+        creates: /home/app/.ssh/authorized_keys
+    - name: fix authorized_keys permissions
+      file:
+        name: /home/app/.ssh/authorized_keys
+        owner: app
+        group: app
+        mode: 0600
+
+- name: Put app user into sudoers
+  user: root
+  hosts: launched
+  roles:
+    - role: sudoers
+
+- name: User installed packages
+  hosts: launched
+  user: app
+  roles:
+    - role: rbenv

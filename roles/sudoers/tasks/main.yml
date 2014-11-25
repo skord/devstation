@@ -1,0 +1,4 @@
+- name: Add app user to sudoers
+  copy:
+    src: app
+    dest: /etc/sudoers.d/app
