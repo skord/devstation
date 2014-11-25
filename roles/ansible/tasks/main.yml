@@ -1,0 +1,20 @@
+- name: install ubuntu specific apt packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 120
+  with_items:
+    - 'python-pip'
+    - 'python-curl'
+    - 'python-dev'
+    - 'python-apt'
+- name: pip install ansible and deps
+  pip:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - 'docker-py'
+    - 'pycrypto'
+    - 'ansible'
+
